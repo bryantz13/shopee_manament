@@ -21,6 +21,7 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
+  ModalCloseButton,
   useDisclosure,
   Link,
   Card,
@@ -29,9 +30,11 @@ import {
 } from "@chakra-ui/react";
 
 function index() {
+  const modalAdd = useDisclosure()
+
   return (
     <>
-      <Card maxW="sm" mb={'10px'} boxShadow='base'>
+      <Card maxW="sm" mb={"10px"} boxShadow="base">
         <CardBody>
           <Box>
             <Flex alignItems="center">
@@ -104,6 +107,7 @@ function index() {
                 bgColor={"#ff0000"}
                 // border={"2px solid black"}
                 height={"30px"}
+                onClick={modalAdd.onOpen}
               >
                 <Image
                   src="/images/editshop.png"
@@ -118,6 +122,22 @@ function index() {
           </Box>
         </CardBody>
       </Card>
+
+      {/* Modal แก้ไขร้านค้า */}
+      <Modal onClose={modalAdd.onClose} size={'xl'} isOpen={modalAdd.isOpen}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Modal Title</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={modalAdd.onClose}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* End Modal แก้ไขร้านค้า */}
     </>
   );
 }

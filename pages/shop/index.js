@@ -1,5 +1,6 @@
 import classNames from "classnames";
-import React from "react";
+import { useDropzone } from "react-dropzone";
+import React, { useState, useEffect } from "react";
 import {
   Flex,
   Switch,
@@ -22,16 +23,102 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
+  ModalCloseButton,
   useDisclosure,
   Link,
   Card,
   CardBody,
   Heading,
+  FormControl,
+  FormLabel,
+  Textarea,
+  Grid,
+  GridItem,
+  InputRightElement,
+  Lorem,
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import ListCheck from "@/components/MenuList";
 import CardShop from "@/components/cardShop";
 
+const thumbsContainer = {
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  marginTop: 16,
+};
+
+const thumb = {
+  display: "inline-flex",
+  borderRadius: 2,
+  width: 100,
+  height: 100,
+  marginBottom: 15,
+  boxSizing: "border-box",
+};
+
+const thumbInner = {
+  display: "flex",
+  minWidth: 0,
+  overflow: "hidden",
+};
+
+const img = {
+  display: "block",
+  width: "auto",
+  height: "100%",
+};
+
 export default function shop() {
+  const [files, setFiles] = useState([]);
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      "image/*": [],
+    },
+    onDrop: (acceptedFiles) => {
+      setFiles(
+        acceptedFiles.map((file) =>
+          Object.assign(file, {
+            preview: URL.createObjectURL(file),
+          })
+        )
+      );
+    },
+  });
+
+  const thumbs = files.map((file) => (
+    <div style={thumb} key={file.name}>
+      <div style={thumbInner}>
+        <img
+          src={file.preview}
+          style={img}
+          // Revoke data uri after image is loaded
+          onLoad={() => {
+            URL.revokeObjectURL(file.preview);
+          }}
+        />
+      </div>
+    </div>
+  ));
+  useEffect(() => {
+    // Make sure to revoke the data uris to avoid memory leaks, will run on unmount
+    return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
+  }, []);
+
+  const [buttonActive, setButtonActive] = useState([false, true]);
   const colunm = [
     {
       label: "เรียงตามตัวอักษร",
@@ -46,6 +133,18 @@ export default function shop() {
       label: "จำนวนผู้เข้าชม",
     },
   ];
+  const modalAdd = useDisclosure();
+  const modalAdd2 = useDisclosure();
+
+  const handleClickNextStopAdd = () => {
+    modalAdd.onClose();
+    modalAdd2.onOpen();
+  };
+
+  const [checkedItems, setCheckedItems] = React.useState([false, false]);
+
+  const allChecked = checkedItems.every(Boolean);
+  const isIndeterminate = checkedItems.some(Boolean) && !allChecked;
 
   return (
     <>
@@ -84,25 +183,22 @@ export default function shop() {
           </Box>
           <Spacer />
           <Box borderWidth="1px" borderColor="red" borderRadius="md">
-            <Link href="/stock/addProduct">
-              <Button
-                fontSize="21px"
-                leftIcon={
-                  <Image src="/images/pluswhite.png" h="15px" w="15px" />
-                }
-                bg="red"
-                variant="solid"
-                color="white"
-                _hover={{}}
-              >
-                สร้างร้านค้า
-              </Button>
-            </Link>
+            <Button
+              fontSize="21px"
+              leftIcon={<Image src="/images/pluswhite.png" h="15px" w="15px" />}
+              bg="red"
+              variant="solid"
+              color="white"
+              _hover={{}}
+              onClick={modalAdd.onOpen}
+            >
+              สร้างร้านค้า
+            </Button>
           </Box>
         </Flex>
       </Box>
       <Box pt="5px" pb={"5px"}>
-        <Flex flexWrap={'wrap'} justifyContent={"space-around"}>
+        <Flex flexWrap={"wrap"} justifyContent={"space-around"}>
           <CardShop />
           <CardShop />
           <CardShop />
@@ -111,6 +207,839 @@ export default function shop() {
           <CardShop />
         </Flex>
       </Box>
+
+      {/* Modal สร้างร้านค้า */}
+      <Modal onClose={modalAdd.onClose} size={"xl"} isOpen={modalAdd.isOpen}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <Flex justifyContent={"center"}>
+              <Image
+                src="/images/addshop.png"
+                width={"40px"}
+                height={"35px"}
+                mr={"10px"}
+              />
+              <Text fontSize={"4xl"}>สร้างร้านค้า</Text>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton
+            color={"white"}
+            bgColor={"#ff0000"}
+            borderRadius={"50px"}
+            width={"20px"}
+            height={"20px"}
+            fontSize={"9px"}
+          />
+          <ModalBody>
+            <FormControl>
+              <Box>
+                <Grid
+                  templateColumns="repeat(1, 1fr)"
+                  gap={6}
+                  justifyItems="end"
+                  // pt="15px"
+                  px="35px"
+                >
+                  <GridItem fontSize="25px" width="100%">
+                    <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+                      <GridItem colSpan={1} justifySelf="end">
+                        <Box pr="5px">
+                          <Text>* ชื่อร้านค้า : </Text>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={2}>
+                        <InputGroup>
+                          <Input
+                            pr="100px"
+                            type="text"
+                            placeholder="ระบุชื่อสินค้า"
+                            borderColor="gray.400"
+                          />
+                          <InputRightElement pr="45px">
+                            <Text>0/100</Text>
+                          </InputRightElement>
+                        </InputGroup>
+                      </GridItem>
+                      <GridItem colSpan={1} justifySelf="end">
+                        <Box pr="5px">
+                          <Text whiteSpace={"nowrap"}>
+                            * รายละเอียดร้านค้า :{" "}
+                          </Text>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={2}>
+                        <Box>
+                          <InputGroup flexDirection="column-reverse">
+                            <Textarea
+                              h="100px"
+                              isRequired
+                              resize="none"
+                              maxLength={3000}
+                              borderColor="gray.400"
+                              placeholder="ระบุรายละเอียดสินค้า"
+                              pr="60px"
+                            />
+                            <InputRightElement
+                              h="100%"
+                              alignItems="end"
+                              p="10px"
+                            >
+                              <Text pr="45px">0/3000</Text>
+                            </InputRightElement>
+                          </InputGroup>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={1} justifySelf="end">
+                        <Box pr="5px">
+                          <Text>รูปโปรไฟล์ร้านค้า : </Text>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={2}>
+                        <Box>
+                          <Box
+                            {...getRootProps({ className: "dropzone" })}
+                            borderRadius="xl"
+                            bg="gray.100"
+                            h="100px"
+                            w="100px"
+                            fontSize="15px"
+                            p="10px"
+                          >
+                            <Input {...getInputProps()} />
+                            <Image
+                              src="/images/addImage.png"
+                              alt=""
+                              h="40px"
+                              w="40px"
+                            />
+                            <Text>เพิ่มรูปภาพ</Text>
+                            <Text>(0/1)</Text>
+                          </Box>
+                          <aside style={thumbsContainer}>{thumbs}</aside>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={1} justifySelf="end">
+                        <Box pr="5px">
+                          <Text>รูุปปกร้านค้า : </Text>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={2}>
+                        <Box>
+                          <Box
+                            {...getRootProps({ className: "dropzone" })}
+                            borderRadius="xl"
+                            bg="gray.100"
+                            h="100px"
+                            w="100px"
+                            fontSize="15px"
+                            p="10px"
+                          >
+                            <Input {...getInputProps()} />
+                            <Image
+                              src="/images/addImage.png"
+                              alt=""
+                              h="40px"
+                              w="40px"
+                            />
+                            <Text pt="5px">เพิ่มรูปภาพ</Text>
+                            <Text>(0/1)</Text>
+                          </Box>
+                          <aside style={thumbsContainer}>{thumbs}</aside>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={1} justifySelf="end">
+                        <Box pr="5px">
+                          <Text>* รูปแบบร้านค้า : </Text>
+                        </Box>
+                      </GridItem>
+                      <GridItem colSpan={2}>
+                        <Box>
+                          <Select
+                            placeholder="ค่าเริ่มต้น"
+                            w="150px"
+                            borderColor="gray.400"
+                          >
+                            <option value="item1">1</option>
+                            <option value="item2">2</option>
+                            <option value="item3">3</option>
+                            <option value="item4">4</option>
+                          </Select>
+                        </Box>
+                      </GridItem>
+                    </Grid>
+                  </GridItem>
+                </Grid>
+              </Box>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter justifyContent={"center"}>
+            <Button
+              onClick={modalAdd.onClose}
+              bgColor={"white"}
+              color={"#ff0000"}
+              border={"2px solid #ff0000"}
+              height={"35px"}
+              leftIcon={
+                <Image src="/images/viewshop.png" h="15px" width={"25px"} />
+              }
+              mr={"10px"}
+            >
+              ดูตัวอย่าง
+            </Button>
+            <Button
+              onClick={modalAdd.onClose}
+              bgColor={"white"}
+              color={"gray"}
+              border={"2px solid gray"}
+              px={"2rem"}
+              height={"35px"}
+              mr={"10px"}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={handleClickNextStopAdd}
+              bgColor={"#ff0000"}
+              color={"white"}
+              px={"2rem"}
+              height={"35px"}
+            >
+              ถัดไป
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* End Modal สร้างร้านค้า */}
+
+      {/* Modal สร้างร้านค้า */}
+      <Modal
+        onClose={modalAdd2.onClose}
+        size="custom"
+        isOpen={modalAdd2.isOpen}
+        scrollBehavior={"inside"}
+      >
+        <ModalOverlay />
+        <ModalContent width="800px" height="600px">
+          <ModalHeader>
+            <Flex justifyContent={"center"}>
+              <Image
+                src="/images/selectproduct.png"
+                width={"40px"}
+                height={"35px"}
+                mr={"10px"}
+              />
+              <Text fontSize={"4xl"}>เลือกสินค้า</Text>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton
+            color={"white"}
+            bgColor={"#ff0000"}
+            borderRadius={"50px"}
+            width={"20px"}
+            height={"20px"}
+            fontSize={"9px"}
+          />
+          <ModalBody>
+            <TableContainer>
+              <Table variant="striped" colorScheme="gray">
+                <Thead bgColor={"#ff0000"}>
+                  <Tr>
+                    <Th color={"white"}>เลือกทั้งหมด</Th>
+                    <Th color={"white"}>รหัสสินค้า</Th>
+                    <Th color={"white"}>รูปสินค้า</Th>
+                    <Th color={"white"}>ชื่อสินค้า</Th>
+                    <Th color={"white"}>ราคา</Th>
+                    <Th color={"white"}>สต๊อกสินค้า</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  <Tr>
+                    <Td>inches</Td>
+                    <Td>001</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>feet</Td>
+                    <Td>002</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>003</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>004</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>005</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>006</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>007</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>008</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>009</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>010</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>011</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>012</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>013</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>014</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>015</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>016</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td>yards</Td>
+                    <Td>017</Td>
+                    <Td isNumeric>
+                      <Image
+                        src="images/addProduct.png"
+                        width={"30px"}
+                        height={"25px"}
+                      />
+                    </Td>
+                    <Td>BIGMER</Td>
+                    <Td>149.00</Td>
+                    <Td>
+                      <Flex alignItems={"center"}>
+                        <NumberInput
+                          defaultValue={15}
+                          min={0}
+                          bgColor={"white"}
+                          borderRadius="10px"
+                          backgroundColor="white"
+                          width="90px"
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                        / 1,500
+                      </Flex>
+                    </Td>
+                  </Tr>
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </ModalBody>
+          <ModalFooter justifyContent={"center"}>
+            <Button
+              onClick={modalAdd2.onClose}
+              bgColor={"white"}
+              color={"#ff0000"}
+              border={"2px solid #ff0000"}
+              height={"35px"}
+              leftIcon={
+                <Image src="/images/viewshop.png" h="15px" width={"25px"} />
+              }
+              mr={"10px"}
+            >
+              ดูตัวอย่าง
+            </Button>
+            <Button
+              onClick={modalAdd2.onClose}
+              bgColor={"white"}
+              color={"gray"}
+              border={"2px solid gray"}
+              px={"2rem"}
+              height={"35px"}
+              mr={"10px"}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              onClick={modalAdd2.onClose}
+              bgColor={"#ff0000"}
+              color={"white"}
+              px={"2rem"}
+              height={"35px"}
+            >
+              สร้างร้านค้า
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* End Modal สร้างร้านค้า */}
     </>
   );
 }
