@@ -1,6 +1,5 @@
-import classNames from "classnames";
+import React, { useLayoutEffect, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import React, { useState, useEffect } from "react";
 import {
   Flex,
   Switch,
@@ -52,9 +51,6 @@ import {
   NumberDecrementStepper,
   Checkbox,
 } from "@chakra-ui/react";
-import ListCheck from "@/components/MenuList";
-import CardShop from "@/components/cardShop";
-import Axios from "axios";
 
 const thumbsContainer = {
   display: "flex",
@@ -84,9 +80,12 @@ const img = {
   height: "100%",
 };
 
-export default function shop() {
-  const [getProducts, setProducts] = useState([]);
-  const [getShops, setShops] = useState([]);
+function modalEditStep1(props) {
+  const { isOpen, onClose, Shops } = props;
+  const modalEditNextStep = useDisclosure();
+  const modalConfirmEdit = useDisclosure();
+  const modalConfirmEditSuccess = useDisclosure();
+  const [files, setFiles] = useState([]);
   const [getProduct, setGetProduct] = useState([
     {
       id: 1,
@@ -142,8 +141,6 @@ export default function shop() {
       checked: false,
     },
   ]);
-
-  const [files, setFiles] = useState([]);
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "image/*": [],
@@ -178,40 +175,9 @@ export default function shop() {
     return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
   }, []);
 
-  const [buttonActive, setButtonActive] = useState([false, true]);
-  const colunm = [
-    {
-      label: "เรียงตามตัวอักษร",
-    },
-    {
-      label: "เรียงตามวันที่สร้าง",
-    },
-    {
-      label: "เรียงตามวันที่แก้ไข",
-    },
-    {
-      label: "จำนวนผู้เข้าชม",
-    },
-  ];
-  const modalAdd = useDisclosure();
-  const modalAdd2 = useDisclosure();
-  const modalPreview = useDisclosure();
-  const modalConfirm = useDisclosure();
-  const modalConfirmSuccess = useDisclosure();
-
-  const handleClickNextStopAdd = () => {
-    modalAdd.onClose();
-    modalAdd2.onOpen();
-  };
-
-  const handleConfirm = () => {
-    modalAdd2.onClose();
-    modalConfirm.onOpen();
-  };
-
-  const handleConfirmSuccess = () => {
-    modalConfirm.onClose();
-    modalConfirmSuccess.onOpen();
+  const handleEditNextStep = () => {
+    onClose();
+    modalEditNextStep.onOpen();
   };
 
   const handleSelectAllChange = (e) => {
@@ -235,84 +201,24 @@ export default function shop() {
   const isIndeterminate =
     getProduct.some((product) => product.checked) && !allChecked;
 
-  useEffect(() => {
-    Axios.get("https://shopee-api.deksilp.com/api/getAllProduct").then(
-      function (response) {
-        setProducts(response.data.product);
-      }
-    );
-  }, []);
+  const handleConfirmEdit = () => {
+    modalEditNextStep.onClose();
+    modalConfirmEdit.onOpen();
+  };
 
-  useEffect(() => {
-    Axios.get("https://shopee-api.deksilp.com/api/getAllShops").then(function (
-      response
-    ) {
-      setShops(response.data.shops);
-    });
-  }, []);
+  const handleConfirmEditSuccess = () => {
+    modalConfirmEdit.onClose();
+    modalConfirmEditSuccess.onOpen();
+  };
+
   return (
     <>
-      <Box m="10px" pt="10px" pb={"10px"}>
-        <Flex>
-          <Box>
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" ml={"5px"}>
-                <Image src="/images/search.png" h="20px" w="20px" />
-              </InputLeftElement>
-              <Input
-                borderRadius="3xl"
-                type="text"
-                fontSize="21px"
-                borderColor="gray.500"
-                placeholder="ค้นหารายการ"
-              />
-            </InputGroup>
-          </Box>
-          <Box ml="10px">
-            <InputGroup>
-              <InputLeftElement pointerEvents="none" ml={"5px"}>
-                <Image src="/images/calendar.png" h="20px" w="20px" />
-              </InputLeftElement>
-              <Input
-                type="date"
-                borderRadius="3xl"
-                fontSize="21px"
-                borderColor="gray.500"
-                placeholder="เลือกวันที่"
-              />
-            </InputGroup>
-          </Box>
-          <Box ml="10px" border="1px" borderColor="black" borderRadius="md">
-            <ListCheck data={colunm} />
-          </Box>
-          <Spacer />
-          <Box borderWidth="1px" borderColor="red" borderRadius="md">
-            <Button
-              fontSize="21px"
-              leftIcon={<Image src="/images/pluswhite.png" h="15px" w="15px" />}
-              bg="red"
-              variant="solid"
-              color="white"
-              _hover={{}}
-              onClick={modalAdd.onOpen}
-            >
-              สร้างร้านค้า
-            </Button>
-          </Box>
-        </Flex>
-      </Box>
-      <Box pt="5px" pb={"5px"}>
-        <Flex flexWrap={"wrap"} justifyContent={"space-around"}>
-          <CardShop Products={getProducts} Shops={getShops} />
-        </Flex>
-      </Box>
-
-      {/* Modal สร้างร้านค้า */}
+      {/* Modal แก้ไขร้านค้า */}
       <Modal
         closeOnOverlayClick={false}
-        onClose={modalAdd.onClose}
+        onClose={onClose}
+        isOpen={isOpen}
         size={"xl"}
-        isOpen={modalAdd.isOpen}
       >
         <ModalOverlay />
         <ModalContent>
@@ -324,7 +230,7 @@ export default function shop() {
                 height={"35px"}
                 mr={"10px"}
               />
-              <Text fontSize={"4xl"}>สร้างร้านค้า</Text>
+              <Text fontSize={"4xl"}>แก้ไขข้อมูลร้านค้า</Text>
             </Flex>
           </ModalHeader>
           <ModalCloseButton
@@ -359,9 +265,10 @@ export default function shop() {
                             type="text"
                             placeholder="ระบุชื่อสินค้า"
                             borderColor="gray.400"
+                            value={Shops.name_shop}
                           />
                           <InputRightElement pr="45px">
-                            <Text>0/100</Text>
+                            <Text>{Shops.name_shop.length}/100</Text>
                           </InputRightElement>
                         </InputGroup>
                       </GridItem>
@@ -383,13 +290,16 @@ export default function shop() {
                               borderColor="gray.400"
                               placeholder="ระบุรายละเอียดสินค้า"
                               pr="60px"
+                              value={Shops.detail_shop}
                             />
                             <InputRightElement
                               h="100%"
                               alignItems="end"
                               p="10px"
                             >
-                              <Text pr="45px">0/3000</Text>
+                              <Text pr="45px">
+                                {Shops.detail_shop.length}/3000
+                              </Text>
                             </InputRightElement>
                           </InputGroup>
                         </Box>
@@ -479,7 +389,7 @@ export default function shop() {
           </ModalBody>
           <ModalFooter justifyContent={"center"}>
             <Button
-              onClick={modalPreview.onOpen}
+              onClick={onClose}
               bgColor={"white"}
               color={"#ff0000"}
               border={"2px solid #ff0000"}
@@ -492,7 +402,7 @@ export default function shop() {
               ดูตัวอย่าง
             </Button>
             <Button
-              onClick={modalAdd.onClose}
+              onClick={onClose}
               bgColor={"white"}
               color={"gray"}
               border={"2px solid gray"}
@@ -503,7 +413,7 @@ export default function shop() {
               ยกเลิก
             </Button>
             <Button
-              onClick={handleClickNextStopAdd}
+              onClick={handleEditNextStep}
               bgColor={"#ff0000"}
               color={"white"}
               px={"2rem"}
@@ -514,14 +424,14 @@ export default function shop() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {/* End Modal สร้างร้านค้า */}
+      {/* End Modal แก้ไขร้านค้า */}
 
-      {/* Modal Next step สร้างร้านค้า */}
+      {/* Modal Edit Next step สร้างร้านค้า */}
       <Modal
         closeOnOverlayClick={false}
-        onClose={modalAdd2.onClose}
+        onClose={modalEditNextStep.onClose}
         size="custom"
-        isOpen={modalAdd2.isOpen}
+        isOpen={modalEditNextStep.isOpen}
         scrollBehavior={"inside"}
       >
         <ModalOverlay />
@@ -611,7 +521,7 @@ export default function shop() {
           </ModalBody>
           <ModalFooter justifyContent={"center"}>
             <Button
-              onClick={modalPreview.onOpen}
+              onClick={modalEditNextStep.onClose}
               bgColor={"white"}
               color={"#ff0000"}
               border={"2px solid #ff0000"}
@@ -624,7 +534,7 @@ export default function shop() {
               ดูตัวอย่าง
             </Button>
             <Button
-              onClick={modalAdd2.onClose}
+              onClick={modalEditNextStep.onClose}
               bgColor={"white"}
               color={"gray"}
               border={"2px solid gray"}
@@ -635,59 +545,26 @@ export default function shop() {
               ยกเลิก
             </Button>
             <Button
-              onClick={handleConfirm}
+              onClick={handleConfirmEdit}
               bgColor={"#ff0000"}
               color={"white"}
               px={"2rem"}
               height={"35px"}
+              leftIcon={<Image src="/images/updateshop.png" alt="" h="20px" />}
             >
-              สร้างร้านค้า
+              บันทึก
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {/* End Modal Next step สร้างร้านค้า */}
-
-      {/* Modal สร้างร้านค้า */}
-      <Modal
-        closeOnOverlayClick={false}
-        onClose={modalPreview.onClose}
-        size={"xl"}
-        isOpen={modalPreview.isOpen}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader></ModalHeader>
-          <ModalCloseButton
-            color={"white"}
-            bgColor={"#ff0000"}
-            borderRadius={"50px"}
-            width={"20px"}
-            height={"20px"}
-            fontSize={"9px"}
-          />
-          <ModalBody></ModalBody>
-          <ModalFooter justifyContent={"center"}>
-            <Button
-              onClick={modalPreview.onClose}
-              bgColor={"#ff0000"}
-              color={"white"}
-              px={"2rem"}
-              height={"35px"}
-            >
-              ปิด
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      {/* End Modal Preview สร้างร้านค้า */}
+      {/* End Modal Edit Next step สร้างร้านค้า */}
 
       {/* Modal confirm สร้างร้านค้า */}
       <Modal
         closeOnOverlayClick={false}
-        onClose={modalConfirm.onClose}
+        onClose={modalConfirmEdit.onClose}
         size={"lg"}
-        isOpen={modalConfirm.isOpen}
+        isOpen={modalConfirmEdit.isOpen}
       >
         <ModalOverlay />
         <ModalContent top={"20%"}>
@@ -703,19 +580,19 @@ export default function shop() {
           <ModalBody>
             <Flex flexDirection={"column"} alignItems={"center"}>
               <Image
-                src="/images/addshop.png"
+                src="/images/editconfirmshop.png"
                 width={"150px"}
                 // height={"35px"}
                 mr={"10px"}
               />
               <Text fontSize={"5xl"} fontWeight={"bold"} mt={"20px"}>
-                ยืนยันการสร้างร้านค้า
+                ยืนยันการแก้ไขร้านค้า
               </Text>
             </Flex>
           </ModalBody>
           <ModalFooter justifyContent={"center"}>
             <Button
-              onClick={modalConfirm.onClose}
+              onClick={modalConfirmEdit.onClose}
               bgColor={"white"}
               color={"gray"}
               border={"2px solid gray"}
@@ -726,7 +603,7 @@ export default function shop() {
               ยกเลิก
             </Button>
             <Button
-              onClick={handleConfirmSuccess}
+              onClick={handleConfirmEditSuccess}
               bgColor={"#ff0000"}
               color={"white"}
               px={"2rem"}
@@ -742,9 +619,9 @@ export default function shop() {
       {/* Modal confirm success สร้างร้านค้า */}
       <Modal
         closeOnOverlayClick={false}
-        onClose={modalConfirmSuccess.onClose}
+        onClose={modalConfirmEditSuccess.onClose}
         size={"lg"}
-        isOpen={modalConfirmSuccess.isOpen}
+        isOpen={modalConfirmEditSuccess.isOpen}
       >
         <ModalOverlay />
         <ModalContent top={"20%"}>
@@ -766,13 +643,13 @@ export default function shop() {
                 mr={"10px"}
               />
               <Text fontSize={"5xl"} fontWeight={"bold"} mt={"20px"}>
-                สร้างร้านค้าเสร็จสิ้น
+                แก้ไขร้านค้าเสร็จสิ้น
               </Text>
             </Flex>
           </ModalBody>
           <ModalFooter justifyContent={"center"}>
             <Button
-              onClick={modalConfirmSuccess.onClose}
+              onClick={modalConfirmEditSuccess.onClose}
               bgColor={"#ff0000"}
               color={"white"}
               px={"2rem"}
@@ -787,3 +664,5 @@ export default function shop() {
     </>
   );
 }
+
+export default modalEditStep1;
