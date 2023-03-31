@@ -54,7 +54,6 @@ import {
 import ModalEditStep1 from "@/components/modalEditShop/modalEditStep1";
 
 function index(product) {
-  console.log(product);
   const modalEdit = useDisclosure();
   // const modalEditNextStep = useDisclosure();
   const modalDelete = useDisclosure();
@@ -62,7 +61,6 @@ function index(product) {
   // const modalConfirmEdit = useDisclosure();
   // const modalConfirmEditSuccess = useDisclosure();
   const [bookmarks, setBookmarks] = useState({});
-  
 
   const handleConfirmDelete = () => {
     modalDelete.onClose();
@@ -86,6 +84,14 @@ function index(product) {
       [shopId]: !prevState[shopId],
     }));
   };
+
+  const [copiedShopUrl, setCopiedShopUrl] = useState(null);
+
+  const handleCopyClick = (shopUrl) => () => {
+    navigator.clipboard.writeText(shopUrl);
+    setCopiedShopUrl(shopUrl);
+  };
+
   return (
     <>
       {product.Shops.map((shops) => {
@@ -105,7 +111,11 @@ function index(product) {
               <CardBody>
                 <Box>
                   <Flex alignItems="center">
-                    <Switch colorScheme="brand" size="sm" mr={"5px"} />
+                    <Switch
+                      colorScheme="brand"
+                      size="sm"
+                      mr={"5px"}
+                    />
                     เปิด/ปิดเพื่อแสดง
                     <Spacer />
                     <Image
@@ -164,6 +174,7 @@ function index(product) {
                       bgColor={"white"}
                       border={"2px solid red"}
                       height={"30px"}
+                      onClick={handleCopyClick(shops.url_shop)}
                     >
                       <Image
                         src="/images/copyshop.png"
@@ -171,7 +182,9 @@ function index(product) {
                         height={"20px"}
                       />
                       <Text ml={"8px"} fontSize="xl" color={"#ff0000"}>
-                        คัดลอกลิงค์
+                        {copiedShopUrl === shops.url_shop
+                          ? "คัดลอกสำเร็จ!"
+                          : "คัดลอกลิงค์"}
                       </Text>
                     </Button>
                     <Button
@@ -223,7 +236,6 @@ function index(product) {
       {/* {product.Products.map((product) => (
         
       ))} */}
-      
 
       {/* Modal Delete ลบร้านค้า */}
       <Modal

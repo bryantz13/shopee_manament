@@ -51,6 +51,13 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   Checkbox,
+  Menu,
+  MenuButton,
+  MenuList,
+  CheckboxGroup,
+  MenuItem,
+  RadioGroup,
+  Radio,
 } from "@chakra-ui/react";
 import ListCheck from "@/components/MenuList";
 import CardShop from "@/components/cardShop";
@@ -250,6 +257,73 @@ export default function shop() {
       setShops(response.data.shops);
     });
   }, []);
+
+  const [query, setQuery] = useState("");
+  const [searchDateShops, setSearchDateShops] = useState("");
+  const [filterShops, setFilterShops] = useState("");
+
+  const handleSearch = (event) => {
+    const searchQuery = event.target.value;
+    setQuery(searchQuery);
+    if (searchQuery === "") {
+      setQuery(null);
+    }
+  };
+
+  const handleSearchDateShops = (event) => {
+    const DateShops = event.target.value;
+    console.log("date", DateShops);
+    setSearchDateShops(DateShops);
+    if (DateShops === "") {
+      setSearchDateShops(null);
+      setQuery(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await Axios.get(
+        `https://shopee-api.deksilp.com/api/getSearchShops?search=${query}`
+      );
+      setShops(response.data.shops);
+    };
+
+    if (query !== "") {
+      fetchData();
+    }
+  }, [query]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await Axios.get(
+        `https://shopee-api.deksilp.com/api/getSearchDateShops?search=${searchDateShops}`
+      );
+      setShops(response.data.shops);
+    };
+
+    if (searchDateShops !== "") {
+      fetchData();
+    }
+  }, [searchDateShops]);
+
+  const handleFilterShops = (value) => {
+    const TypeShops = value;
+    setFilterShops(TypeShops);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await Axios.get(
+        `https://shopee-api.deksilp.com/api/getFilterShops?type=${filterShops}`
+      );
+      setShops(response.data.shops);
+    };
+
+    if (filterShops !== "") {
+      fetchData();
+    }
+  }, [filterShops]);
+
   return (
     <>
       <Box m="10px" pt="10px" pb={"10px"}>
@@ -264,7 +338,9 @@ export default function shop() {
                 type="text"
                 fontSize="21px"
                 borderColor="gray.500"
-                placeholder="ค้นหารายการ"
+                placeholder="ค้นหาชื่อร้านค้า"
+                value={query || ""}
+                onChange={handleSearch}
               />
             </InputGroup>
           </Box>
@@ -279,11 +355,115 @@ export default function shop() {
                 fontSize="21px"
                 borderColor="gray.500"
                 placeholder="เลือกวันที่"
+                value={searchDateShops || ""}
+                onChange={handleSearchDateShops}
               />
             </InputGroup>
           </Box>
           <Box ml="10px" border="1px" borderColor="black" borderRadius="md">
-            <ListCheck data={colunm} />
+            {/* <ListCheck data={colunm} /> */}
+            <Menu closeOnSelect={false}>
+              <MenuButton
+                as={Button}
+                bg="white !important"
+                fontSize="21px"
+                leftIcon={<Image src="/images/menu.png" h="25px" w="25px" />}
+                rightIcon={
+                  <Image
+                    src="/images/arrow/down-filled-triangular-arrow.png"
+                    h="10px"
+                    w="20px"
+                  />
+                }
+                _hover={{}}
+              >
+                เลือกตัวแสดงผล
+              </MenuButton>
+              <MenuList
+                minWidth="200px"
+                border="1px"
+                borderColor="black"
+                borderRadius="md"
+              >
+                <RadioGroup onChange={handleFilterShops} value={filterShops}>
+                <MenuItem>
+                    <Radio
+                      sx={{
+                        ".chakra-radio__control": {
+                          background: "white !important",
+                          borderColor: "black !important",
+                          color: "#3FFF33 !important",
+                          border: "1px solid",
+                        },
+                      }}
+                      value="default"
+                    >
+                      เรียงตามค่าเริ่มต้น
+                    </Radio>
+                  </MenuItem>
+                  <MenuItem>
+                    <Radio
+                      sx={{
+                        ".chakra-radio__control": {
+                          background: "white !important",
+                          borderColor: "black !important",
+                          color: "#3FFF33 !important",
+                          border: "1px solid",
+                        },
+                      }}
+                      value="asc"
+                    >
+                      เรียงตามตัวอักษร
+                    </Radio>
+                  </MenuItem>
+                  <MenuItem>
+                    <Radio
+                      sx={{
+                        ".chakra-radio__control": {
+                          background: "white !important",
+                          borderColor: "black !important",
+                          color: "#3FFF33 !important",
+                          border: "1px solid",
+                        },
+                      }}
+                      value="createdDateShop"
+                    >
+                      เรียงตามวันที่สร้าง
+                    </Radio>
+                  </MenuItem>
+                  <MenuItem>
+                    <Radio
+                      sx={{
+                        ".chakra-radio__control": {
+                          background: "white !important",
+                          borderColor: "black !important",
+                          color: "#3FFF33 !important",
+                          border: "1px solid",
+                        },
+                      }}
+                      value="modifiedDateShop"
+                    >
+                      เรียงตามวันที่แก้ไข
+                    </Radio>
+                  </MenuItem>
+                  {/* <MenuItem>
+                    <Radio
+                      sx={{
+                        ".chakra-radio__control": {
+                          background: "white !important",
+                          borderColor: "black !important",
+                          color: "#3FFF33 !important",
+                          border: "1px solid",
+                        },
+                      }}
+                      value="viewCount"
+                    >
+                      จำนวนผู้เข้าชม
+                    </Radio>
+                  </MenuItem> */}
+                </RadioGroup>
+              </MenuList>
+            </Menu>
           </Box>
           <Spacer />
           <Box borderWidth="1px" borderColor="red" borderRadius="md">
