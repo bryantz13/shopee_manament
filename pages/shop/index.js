@@ -272,7 +272,6 @@ export default function shop() {
 
   const handleSearchDateShops = (event) => {
     const DateShops = event.target.value;
-    console.log("date", DateShops);
     setSearchDateShops(DateShops);
     if (DateShops === "") {
       setSearchDateShops(null);

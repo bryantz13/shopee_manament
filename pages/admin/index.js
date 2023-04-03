@@ -1,21 +1,30 @@
-import React from 'react'
+import React, { useState, useEffect } from "react";
 import {
-  Box, Text, HStack, Center, Input, Button,
-  Spacer, Avatar, Select, IconButton, Flex, Stack,
-  InputGroup, InputLeftElement, Wrap, WrapItem,
-  FormControl, FormLabel, Grid, GridItem,
-  Switch, VStack, InputRightElement,
-} from "@chakra-ui/react"
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableCaption,
-  TableContainer,
-} from '@chakra-ui/react'
+  Box,
+  Text,
+  HStack,
+  Center,
+  Input,
+  Button,
+  Spacer,
+  Avatar,
+  Select,
+  IconButton,
+  Flex,
+  Stack,
+  InputGroup,
+  InputLeftElement,
+  Wrap,
+  WrapItem,
+  FormControl,
+  FormLabel,
+  Grid,
+  GridItem,
+  Switch,
+  VStack,
+  InputRightElement,
+  Tooltip,
+} from "@chakra-ui/react";
 import {
   Modal,
   ModalOverlay,
@@ -24,331 +33,499 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-} from '@chakra-ui/react'
-import { useDisclosure } from '@chakra-ui/react'
-import Image from 'next/image'
+} from "@chakra-ui/react";
+import { useDisclosure } from "@chakra-ui/react";
+import Image from "next/image";
 import {
-  AddIcon, EditIcon, DeleteIcon,
-  ArrowLeftIcon, ArrowRightIcon, SearchIcon
-} from '@chakra-ui/icons';
+  AddIcon,
+  EditIcon,
+  DeleteIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  SearchIcon,
+} from "@chakra-ui/icons";
+import Axios from "axios";
+import { Table } from "@nextui-org/react";
+
+const colunmThTable = [
+  {
+    label: "รูปภาพ",
+  },
+  {
+    label: "ชื่อ - นามสกุล",
+  },
+  {
+    label: "E-mail",
+  },
+  {
+    label: "สถานะ",
+  },
+  {
+    label: "สิทธิ์การเข้าถึง",
+  },
+  {
+    label: "วันที่สร้าง",
+  },
+  {
+    label: "เพิ่มเติม",
+  },
+];
 
 export default function AdminManagement() {
+  const modalAdd = useDisclosure();
+  const modalCopy = useDisclosure();
+  const modalSuccess = useDisclosure();
+  const modalDelete = useDisclosure();
+  const modalDeleteSuccess = useDisclosure();
+  const [inputValueURL, setInputValueURL] = useState("");
+  const [userIdAdmin, setUserIdAdmin] = useState("");
+  const [userNameAdmin, setUserNameAdmin] = useState("");
+  const [getAllUsers, setAllUsers] = useState([]);
 
-  const modalAdd = useDisclosure()
-  const modalCopy = useDisclosure()
-  const modalSuccess = useDisclosure()
+  useEffect(() => {
+    Axios.get("https://shopee-api.deksilp.com/api/getAllUsers").then(function (
+      response
+    ) {
+      setAllUsers(response.data.users);
+    });
+  }, []);
 
+  const handleAddAdmin = () => {
+    modalAdd.onClose();
+    modalCopy.onOpen();
+  };
 
+  const copyUrlAdmin = () => {
+    navigator.clipboard.writeText("http://admin.picpang.com/login");
+    setInputValueURL("คัดลอกสำเร็จ!");
+  };
+
+  const copyAllAdmin = () => {
+    const accountAdmin =
+      "ลิงค์เข้าใช้งาน : http://admin.picpang.com/login\nUsername : aaaa\nPassword : 12345";
+    navigator.clipboard.writeText(accountAdmin);
+    modalCopy.onClose();
+    modalSuccess.onOpen();
+  };
+
+  //pagination
+  const [itemsPerPage, setItemPerpages] = useState(5);
+  const handleSelectChange = (event) => {
+    setItemPerpages(event.target.value);
+  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [inputValue, setinputValue] = useState(1);
+  const handleInputChange = (event) => {
+    if (
+      event.target.value !== "" &&
+      event.target.value >= 1 &&
+      event.target.value <= totalPages
+    ) {
+      setCurrentPage(parseInt(event.target.value));
+      setinputValue(parseInt(event.target.value));
+    } else if (event.target.value === "") {
+      setinputValue("");
+    }
+  };
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setinputValue(page);
+  };
+  let item = parseInt(itemsPerPage);
+  const totalPages = Math.ceil(getAllUsers.length / item);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+      setinputValue(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handleModalDeleteAdmin = (userID, userName) => {
+    setUserIdAdmin(userID);
+    setUserNameAdmin(userName);
+    modalDelete.onOpen();
+  };
+
+  const handleConfirmDeleteAdmin = () => {
+    modalDelete.onClose();
+    modalDeleteSuccess.onOpen();
+  }
 
   return (
     <>
-
       <Box p={[5, 10]}>
-
         <Box>
           <Center>
             <HStack>
-              <Image width={42} height={42} src={'/images/menu/จัดการแอดมิน.png'} alt='admin' />
-              <Text as='b' fontSize='4xl' color='#f84c01' pt={3}> จัดการแอดมิน</Text>
+              <Image
+                width={42}
+                height={42}
+                src={"/images/menu/จัดการแอดมิน.png"}
+                alt="admin"
+              />
+              <Text as="b" fontSize="4xl" color="#f84c01" pt={3}>
+                {" "}
+                จัดการแอดมิน
+              </Text>
             </HStack>
           </Center>
         </Box>
 
-        <Box mt={'10'}>
+        <Box mt={"10"}>
           <HStack>
-            <InputGroup width='auto'>
-              <InputLeftElement
-                pointerEvents='none'
-                children={<SearchIcon color='gray.300' />}
-              />
-              <Input type='text' placeholder='ค้นหารายการ' />
-            </InputGroup>
+            <Box>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none" ml={"5px"}>
+                  <Image width={20} height={20} src={"/images/search.png"} />
+                </InputLeftElement>
+                <Input
+                  borderRadius="3xl"
+                  type="text"
+                  fontSize="21px"
+                  borderColor="gray.500"
+                  placeholder="ค้นหารายการ"
+                />
+              </InputGroup>
+            </Box>
             <Spacer />
-            <Input width='auto' placeholder='เลือกวันที่' size='md' type="datetime-local" />
-            <Button onClick={modalAdd.onOpen} leftIcon={<AddIcon />} background='#f84c01' color='white'>เพิ่มแอดมิน</Button >
+            <Box>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none" ml={"5px"}>
+                  <Image width={20} height={20} src={"/images/calendar.png"} />
+                </InputLeftElement>
+                <Input
+                  type="date"
+                  borderRadius="3xl"
+                  fontSize="21px"
+                  borderColor="gray.500"
+                  placeholder="เลือกวันที่"
+                />
+              </InputGroup>
+            </Box>
+            <Button
+              onClick={modalAdd.onOpen}
+              leftIcon={<AddIcon />}
+              background="#f84c01"
+              color="white"
+            >
+              เพิ่มแอดมิน
+            </Button>
           </HStack>
         </Box>
 
-        <Box mt={10}>
-          <TableContainer fontSize='17'>
-            <Table variant='striped' colorScheme='gray'>
-              <Thead >
-                <Tr bg={'#f84c01'}>
-                  <Th color={'white'} borderLeftRadius={'10'} fontSize='15' py='8'>รูปภาพ</Th>
-                  <Th color={'white'} fontSize='15'>ชื่อ - นามสกุล</Th>
-                  <Th color={'white'} fontSize='15'>Email</Th>
-                  <Th color={'white'} fontSize='15'>สถานะ</Th>
-                  <Th color={'white'} fontSize='15'>สิทธิ์การเข้าถึง</Th>
-                  <Th color={'white'} fontSize='15'>วันที่สร้าง</Th>
-                  <Th color={'white'} borderRightRadius={'10'} fontSize='15'>เพิ่มเติม</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-
-
-                <Tr display={'none'}> {/* Row Gray */}
-                  <Td borderLeftRadius={'10'}></Td>
-                  <Td></Td>
-                  <Td></Td>
-                  <Td></Td>
-                  <Td></Td>
-                  <Td></Td>
-                  <Td borderRightRadius={'10'}></Td>
-                </Tr>
-
-
-                <Tr> {/* Row White */}
-                  <Td borderLeftRadius={'10'}><Avatar size='md' name='adebayo' src='https://bit.ly/sage-adebayo' /></Td>
-                  <Td>Segun Adebayo</Td>
-                  <Td>Segun_Adebayo@gmail.com</Td>
-                  <Td>Admin</Td>
-                  <Td>ร้านค้าของฉัน/คลังสินค้า</Td>
-                  <Td>25/02/2566</Td>
-                  <Td borderRightRadius={'10'}>
-                    <HStack>
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='blue'
-                        aria-label='Edit'
-                        icon={<EditIcon />}
+        <Box mt={3}>
+          <Table
+            striped
+            sticked
+            aria-label="Example table with static content"
+            css={{
+              height: "auto",
+              minWidth: "100%",
+              border: "0px",
+              boxShadow: "none",
+            }}
+            css={{ padding: "0px !important" }}
+          >
+            <Table.Header bg="#ff0000">
+              {colunmThTable.map((item, index) => {
+                return (
+                  <Table.Column
+                    style={{ backgroundColor: "#ff0000", color: "white" }}
+                    key={index}
+                    css={{
+                      textAlign: "center",
+                      padding: "0px !important",
+                      height: "55px",
+                    }}
+                  >
+                    <Text fontSize="21px">{item.label}</Text>
+                  </Table.Column>
+                );
+              })}
+            </Table.Header>
+            <Table.Body>
+              {getAllUsers.map((item, index) => {
+                const dateCreate = new Date(item.user_created_at);
+                const formattedDateCreate = dateCreate.toLocaleDateString();
+                return (
+                  <Table.Row
+                    key={index}
+                    css={
+                      index % 2 !== 0
+                        ? { fontSize: "21px", background: "$gray100" }
+                        : { fontSize: "21px" }
+                    }
+                  >
+                    <Table.Cell css={{ textAlign: "center" }}>
+                      <Avatar
+                        size="md"
+                        name="adebayo"
+                        src="https://bit.ly/dan-abramov"
                       />
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='red'
-                        aria-label='Delete'
-                        icon={<DeleteIcon />}
-                      />
-                    </HStack>
-                  </Td>
-                </Tr>
-
-
-                <Tr> {/* Row Gray */}
-                  <Td borderLeftRadius={'10'}><Avatar size='md' name='adebayo' src='https://bit.ly/dan-abramov' /></Td>
-                  <Td>Dan Abrahmov</Td>
-                  <Td>Dan_Abrahmov@gmail.com</Td>
-                  <Td>Super Admin</Td>
-                  <Td>ทุกเมนู</Td>
-                  <Td>12/01/2565</Td>
-                  <Td borderRightRadius={'10'}>
-                    <HStack>
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='blue'
-                        aria-label='Edit'
-                        icon={<EditIcon />}
-                      />
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='red'
-                        aria-label='Delete'
-                        icon={<DeleteIcon />}
-                      />
-                    </HStack>
-                  </Td>
-                </Tr>
-
-
-                <Tr> {/* Row White */}
-                  <Td borderLeftRadius={'10'} borderColor='white'><Avatar size='md' name='adebayo' src='https://bit.ly/kent-c-dodds' /></Td>
-                  <Td>Kent Dodds</Td>
-                  <Td>Kent_Dodds@gmail.com</Td>
-                  <Td>Admin</Td>
-                  <Td>คลังสินค้า/รายงาน</Td>
-                  <Td>01/04/2565</Td>
-                  <Td borderRightRadius={'10'}>
-                    <HStack>
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='blue'
-                        aria-label='Edit'
-                        icon={<EditIcon />}
-                      />
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='red'
-                        aria-label='Delete'
-                        icon={<DeleteIcon />}
-                      />
-                    </HStack>
-                  </Td>
-                </Tr>
-
-
-                <Tr> {/* Row Gray */}
-                  <Td borderLeftRadius={'10'}><Avatar size='md' name='adebayo' src='https://bit.ly/code-beast' /></Td>
-                  <Td>Christian Nwamba</Td>
-                  <Td>Christian_Nwamba@gmail.com</Td>
-                  <Td>Admin</Td>
-                  <Td>คลังสินค้า/รายงาน</Td>
-                  <Td>16/02/2565</Td>
-                  <Td borderRightRadius={'10'}>
-                    <HStack>
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='blue'
-                        aria-label='Edit'
-                        icon={<EditIcon />}
-                      />
-                      <IconButton
-                        borderRadius="3xl"
-                        colorScheme='red'
-                        aria-label='Delete'
-                        icon={<DeleteIcon />}
-                      />
-                    </HStack>
-                  </Td>
-                </Tr>
-              </Tbody>
-
-            </Table>
-          </TableContainer>
+                    </Table.Cell>
+                    <Table.Cell css={{ textAlign: "center" }}>
+                      {item.user_name}
+                    </Table.Cell>
+                    <Table.Cell>{item.email}</Table.Cell>
+                    <Table.Cell css={{ textAlign: "center" }}>
+                      {item.role_name}
+                    </Table.Cell>
+                    <Table.Cell css={{ textAlign: "center" }}>
+                      ทุกเมนู
+                    </Table.Cell>
+                    <Table.Cell css={{ textAlign: "center" }}>
+                      {formattedDateCreate}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Flex justifyContent={"center"}>
+                        <HStack>
+                          <IconButton
+                            borderRadius="3xl"
+                            colorScheme="blue"
+                            aria-label="Edit"
+                            icon={<EditIcon />}
+                          />
+                          <IconButton
+                            borderRadius="3xl"
+                            colorScheme="red"
+                            aria-label="Delete"
+                            icon={<DeleteIcon />}
+                            onClick={() => handleModalDeleteAdmin(item.userID,item.user_name)}
+                          />
+                        </HStack>
+                      </Flex>
+                    </Table.Cell>
+                  </Table.Row>
+                );
+              })}
+            </Table.Body>
+          </Table>
         </Box>
-
-        <Box mt={'10'}>
-          <HStack>
-
-            <Wrap>
+        <Box>
+          <Flex m="10px">
+            <Wrap alignSelf="center" fontSize="21px">
               <WrapItem>
-                <Text>แสดงผล:</Text>
+                <Text>แสดงผล : </Text>
               </WrapItem>
               <WrapItem>
-                <Select size='xs' >
-                  <option value='option1'>10</option>
-                  <option value='option2'>20</option>
-                  <option value='option3'>30</option>
+                <Select size="xs" onChange={handleSelectChange}>
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
                 </Select>
               </WrapItem>
+              <WrapItem>
+                <Text>จำนวนแอดมิน : </Text>
+              </WrapItem>
+              <WrapItem>
+                <Text>{getAllUsers.length}</Text>
+              </WrapItem>
             </Wrap>
-
             <Spacer />
+            <HStack spacing="2" alignSelf="center" fontSize="21px">
+              <Button
+                disabled={currentPage === 1 || currentPage < 1}
+                onClick={() =>
+                  handlePageChange(
+                    currentPage === 1 ? currentPage : currentPage - 1
+                  )
+                }
+                background="white"
+                _hover={{}}
+              >
+                <Image
+                  width={10}
+                  height={15}
+                  src={"/images/arrow/left-arrow.png"}
+                />
+              </Button>
 
-            <Stack direction='row'>
-              <Wrap>
-                <WrapItem>
-                  <IconButton
-                    aria-label='Previous page'
-                    icon={<ArrowLeftIcon />}
-                    size={'xs'}
-                  />
-                </WrapItem>
-                <WrapItem>
-                  <Text>หน้า</Text>
-                </WrapItem>
-                <WrapItem>
-                  <Input htmlSize={2} textAlign='center' placeholder='1' size='xs' />
-                </WrapItem>
-                <WrapItem>
-                  <Text>จาก 5</Text>
-                </WrapItem>
-                <WrapItem>
-                  <IconButton
-                    aria-label='Next page'
-                    icon={<ArrowRightIcon />}
-                    size={'xs'}
-                  />
-                </WrapItem>
-              </Wrap>
-            </Stack>
-
-          </HStack>
+              <Text>หน้า</Text>
+              <Input
+                htmlSize={1}
+                placeholder={inputValue}
+                size="xs"
+                onChange={handleInputChange}
+                value={inputValue}
+              />
+              <Text whitespace="nowrap">จาก</Text>
+              <Text whitespace="nowrap">{totalPages}</Text>
+              <Button
+                disabled={currentPage >= totalPages}
+                onClick={() =>
+                  handlePageChange(
+                    currentPage === totalPages ? currentPage : currentPage + 1
+                  )
+                }
+                background="white"
+                _hover={{}}
+              >
+                <Image
+                  width={10}
+                  height={15}
+                  src={"/images/arrow/right-arrow.png"}
+                />
+              </Button>
+            </HStack>
+          </Flex>
         </Box>
 
         {/* Start Modal Add New Admin */}
         <Modal
           isOpen={modalAdd.isOpen}
           onClose={modalAdd.onClose}
+          closeOnOverlayClick={false}
+          size="custom"
         >
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent width={"500px"} height={"410px"} mt={"160px"}>
             <ModalHeader>
-              <Box mt={10} mb={5}>
+              <Box>
                 <Center>
                   <HStack>
-                    <Image width={28} height={28} src={'/images/menu/จัดการแอดมิน.png'} alt='admin' />
-                    <Text as='b' fontSize='4md' >เพิ่มแอดมิน</Text>
+                    <Image
+                      width={28}
+                      height={28}
+                      src={"/images/menu/จัดการแอดมิน.png"}
+                      alt="admin"
+                    />
+                    <Text fontSize="3xl">เพิ่มแอดมิน</Text>
                   </HStack>
                 </Center>
               </Box>
             </ModalHeader>
-            <ModalCloseButton />
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
 
             <ModalBody>
               <FormControl>
-                <HStack justify='center'>
+                <HStack justify="center">
                   <Box>
                     <FormLabel>Username : </FormLabel>
                   </Box>
                   <Box>
-                    <Input placeholder='username@gmail.com' />
+                    <Input placeholder="username@gmail.com" />
                   </Box>
                 </HStack>
               </FormControl>
 
               <FormControl mt={4}>
-                <HStack justify='center'>
+                <HStack justify="center">
                   <Box>
                     <FormLabel>Password : </FormLabel>
                   </Box>
                   <Box>
-                    <Input type={"password"} placeholder='&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;' />
+                    <Input
+                      type={"password"}
+                      placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                    />
                   </Box>
                 </HStack>
               </FormControl>
 
-              <FormControl mt={10} pl={5} pr={5}>
-                <Text as='b'>สิทธิ์การเข้าถึง</Text>
-                <Grid templateColumns='repeat(2, 1fr)' gap={3} mt={4}>
+              <FormControl mt={5} pl={16} pr={5}>
+                <Text as="b">สิทธิ์การเข้าถึง</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={3} mt={4}>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-dashboard' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/dashboard.png'} alt='dashboard' />
+                      <Switch id="switch-dashboard" colorScheme={"green"} />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/dashboard.png"}
+                        alt="dashboard"
+                      />
                       <Text>Dashboard</Text>
                     </HStack>
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-report' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/report.png'} alt='report' />
+                      <Switch id="switch-report" colorScheme={"green"} />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/report.png"}
+                        alt="report"
+                      />
                       <Text>รายงาน</Text>
                     </HStack>
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-shop' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/ร้านค้าของฉัน.png'} alt='shop' />
+                      <Switch id="switch-shop" colorScheme={"green"} />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/ร้านค้าของฉัน.png"}
+                        alt="shop"
+                      />
                       <Text>ร้านค้าของฉัน</Text>
                     </HStack>
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-admin-management' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/จัดการแอดมิน.png'} alt='admin' />
+                      <Switch
+                        id="switch-admin-management"
+                        colorScheme={"green"}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/จัดการแอดมิน.png"}
+                        alt="admin"
+                      />
                       <Text>จัดการแอดมิน</Text>
                     </HStack>
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-store' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/คลังสินค้า.png'} alt='stock' />
+                      <Switch id="switch-store" colorScheme={"green"} />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/คลังสินค้า.png"}
+                        alt="stock"
+                      />
                       <Text>คลังสินค้า</Text>
                     </HStack>
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id='switch-setting' colorScheme={'green'} />
-                      <Image width={24} height={24} src={'/images/menu/ตั้งค่า.png'} alt='setting' />
+                      <Switch id="switch-setting" colorScheme={"green"} />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/ตั้งค่า.png"}
+                        alt="setting"
+                      />
                       <Text>ตั้งค่า</Text>
                     </HStack>
                   </GridItem>
                 </Grid>
               </FormControl>
             </ModalBody>
-            <ModalFooter mt={10}>
-              <Button onClick={modalCopy.onOpen} background='#f84c01' color='white' mr={3}>
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                onClick={handleAddAdmin}
+                background="#f84c01"
+                height={"25px"}
+                fontSize={"22px"}
+                padding={"1rem 1.5rem"}
+                color="white"
+                mr={3}
+              >
                 เพิ่มแอดมิน
               </Button>
-              <Button onClick={modalAdd.onClose}>ยกเลิก</Button>
+              {/* <Button onClick={modalAdd.onClose}>ยกเลิก</Button> */}
             </ModalFooter>
           </ModalContent>
         </Modal>
@@ -358,36 +535,61 @@ export default function AdminManagement() {
         <Modal
           isOpen={modalCopy.isOpen}
           onClose={modalCopy.onClose}
+          closeOnOverlayClick={false}
         >
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent mt={"150px"}>
             <ModalHeader>
-              <Box mt={10} mb={5}>
+              <Box>
                 <Center>
                   <HStack>
-                    <Image width={28} height={28} src={'/images/menu/จัดการแอดมิน.png'} />
-                    <Text as='b' fontSize='4md' >เพิ่มแอดมิน</Text>
+                    <Image
+                      width={28}
+                      height={28}
+                      src={"/images/menu/จัดการแอดมิน.png"}
+                    />
+                    <Text fontSize="3xl">เพิ่มแอดมิน</Text>
                   </HStack>
                 </Center>
               </Box>
             </ModalHeader>
-            <ModalCloseButton />
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
 
             <ModalBody>
-
-              <VStack p={[0, 5]}>
+              <VStack>
                 <FormControl id="copy-link">
-                  <Wrap align='center' float={'right'}>
+                  <Wrap align="center" justify="center">
                     <WrapItem>
                       <FormLabel m={0}>ลิ้งเข้าใช้งาน : </FormLabel>
                     </WrapItem>
                     <WrapItem>
                       <InputGroup>
-                        <Input htmlSize={22} width='auto' placeholder='http://admin.picpang.com/login' />
-                        <InputRightElement width='4.5rem'>
-                          <Button h='1.75rem' size='sm'>
+                        <Input
+                          htmlSize={22}
+                          width="auto"
+                          placeholder="http://admin.picpang.com/login"
+                          value={inputValueURL}
+                        />
+                        <InputRightElement width="2.5rem">
+                          {/* <Button h="1.75rem" size="sm">
                             Copy
-                          </Button>
+                          </Button> */}
+                          <Tooltip label="คัดลอกลิงค์" placement="top">
+                            <Image
+                              width={20}
+                              height={20}
+                              src={"/images/copyurladmin.png"}
+                              onClick={copyUrlAdmin}
+                            />
+                          </Tooltip>
                         </InputRightElement>
                       </InputGroup>
                     </WrapItem>
@@ -395,72 +597,219 @@ export default function AdminManagement() {
                 </FormControl>
 
                 <FormControl id="copy-username">
-                  <Wrap align='center' float={'right'}>
+                  <Wrap align="center" justify="center">
                     <WrapItem>
                       <FormLabel m={0}>Username : </FormLabel>
                     </WrapItem>
 
                     <WrapItem>
-                      <Input htmlSize={25} width='auto' placeholder='username@gmail.com' />
+                      <Input
+                        htmlSize={25}
+                        width="auto"
+                        placeholder="username@gmail.com"
+                      />
                     </WrapItem>
                   </Wrap>
                 </FormControl>
 
                 <FormControl id="copy-password">
-                  <Wrap align='center' float={'right'}>
+                  <Wrap align="center" justify="center">
                     <WrapItem>
                       <FormLabel m={0}>Password : </FormLabel>
                     </WrapItem>
 
                     <WrapItem>
-                      <Input htmlSize={25} width='auto' type={"password"} placeholder='&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;' />
+                      <Input
+                        htmlSize={25}
+                        width="auto"
+                        type={"password"}
+                        placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                      />
                     </WrapItem>
                   </Wrap>
-
                 </FormControl>
               </VStack>
-
-
             </ModalBody>
-            <ModalFooter mt={10}>
-              <Button onClick={modalSuccess.onOpen} background='#f84c01' color='white' mr={3} >
+            <ModalFooter mt={1} justifyContent={"center"}>
+              <Button
+                onClick={copyAllAdmin}
+                background="#f84c01"
+                color="white"
+                ml={5}
+                height={"30px"}
+                fontSize={"20px"}
+                padding={"0rem 1.5rem"}
+              >
                 คัดลอก
               </Button>
-              <Button onClick={modalCopy.onClose}>ยกเลิก</Button>
+              {/* <Button onClick={modalCopy.onClose}>ยกเลิก</Button> */}
             </ModalFooter>
           </ModalContent>
         </Modal>
         {/* End Modal Copy Link */}
 
-
         <Modal
           isOpen={modalSuccess.isOpen}
           onClose={modalSuccess.onClose}
+          size={"lg"}
+          closeOnOverlayClick={false}
         >
           <ModalOverlay />
-          <ModalContent pt={20} pb={20}>
+          <ModalContent pt={10} mt={"150px"}>
             <ModalHeader>
               <Center>
-                <Image width={110} height={110} src={'/images/menu/ร้านค้าของฉัน.png'} alt='เพิ่มแอดมินเรียบร้อย' />
+                <Image
+                  width={110}
+                  height={110}
+                  src={"/images/check.png"}
+                  alt="เพิ่มแอดมินเรียบร้อย"
+                />
               </Center>
             </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody textAlign={'center'}>
-              <Text as='b' fontSize='2xl' >เพิ่มแอดมินเรียบร้อยแล้ว</Text>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+            <ModalBody textAlign={"center"}>
+              <Text as="b" fontSize="4xl">
+                เพิ่มแอดมินเรียบร้อยแล้ว
+              </Text>
             </ModalBody>
 
-            <ModalFooter justifyContent={'center'}>
-
-              <Button size={'lg'} background='#f84c01' color='white' mt={10} onClick={modalSuccess.onClose}>
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                size={"lg"}
+                background="#f84c01"
+                color="white"
+                height={"38px"}
+                fontSize={"30px"}
+                padding={"1.25rem 2.5rem 1rem 2.5rem"}
+                onClick={modalSuccess.onClose}
+              >
                 ยืนยัน
               </Button>
-
             </ModalFooter>
           </ModalContent>
         </Modal>
 
-      </Box>
+        {/* ลบข้อมูลแอดมิน */}
+        <Modal
+          isOpen={modalDelete.isOpen}
+          onClose={modalDelete.onClose}
+          size={"lg"}
+          closeOnOverlayClick={false}
+        >
+          <ModalOverlay />
+          <ModalContent pt={10} mt={"150px"}>
+            <ModalHeader>
+              <Center>
+                <Image
+                  width={110}
+                  height={110}
+                  src={"/images/binred.png"}
+                  alt="คุณต้องการลบแอดมินใช่หรือไม่"
+                />
+              </Center>
+            </ModalHeader>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+            <ModalBody textAlign={"center"}>
+              <Text as="b" fontSize="4xl">
+                คุณต้องการลบ {userNameAdmin} ใช่หรือไม่
+              </Text>
+            </ModalBody>
 
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                size={"lg"}
+                background="#f84c01"
+                color="white"
+                height={"38px"}
+                fontSize={"30px"}
+                padding={"1.25rem 2.5rem 1rem 2.5rem"}
+                mr={2}
+                onClick={handleConfirmDeleteAdmin}
+              >
+                ยืนยัน
+              </Button>
+              <Button
+                size={"lg"}
+                background="white"
+                color="black"
+                height={"38px"}
+                fontSize={"30px"}
+                padding={"1.25rem 2.5rem 1rem 2.5rem"}
+                border={"3px solid gray"}
+                onClick={modalDelete.onClose}
+              >
+                ยกเลิก
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* ยืนยันลบแอดมิน */}
+        <Modal
+          isOpen={modalDeleteSuccess.isOpen}
+          onClose={modalDeleteSuccess.onClose}
+          size={"lg"}
+          closeOnOverlayClick={false}
+        >
+          <ModalOverlay />
+          <ModalContent pt={10} mt={"150px"}>
+            <ModalHeader>
+              <Center>
+                <Image
+                  width={110}
+                  height={110}
+                  src={"/images/check.png"}
+                  alt="ลบแอดมินเรียบร้อย"
+                />
+              </Center>
+            </ModalHeader>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+            <ModalBody textAlign={"center"}>
+              <Text as="b" fontSize="4xl">
+                ลบแอดมินเรียบร้อยแล้ว
+              </Text>
+            </ModalBody>
+
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                size={"lg"}
+                background="#f84c01"
+                color="white"
+                height={"38px"}
+                fontSize={"30px"}
+                padding={"1.25rem 2.5rem 1rem 2.5rem"}
+                onClick={modalDeleteSuccess.onClose}
+              >
+                ยืนยัน
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Box>
     </>
-  )
+  );
 }
