@@ -82,17 +82,80 @@ export default function AdminManagement() {
   const [userNameAdmin, setUserNameAdmin] = useState("");
   const [getAllUsers, setAllUsers] = useState([]);
 
-  useEffect(() => {
+  //filter search Date
+  const [searchDateSubAdmin, setSearchDateSubAdmin] = useState("");
+
+  // filter search Name
+  const [searchName, setSearchName] = useState("");
+
+  // create sub admin
+  const [createNameSubAdmin, setCreateNameSubAdmin] = useState("");
+  const [createEmailSubAdmin, setCreateEmailSubAdmin] = useState("");
+  const [createPasswordSubAdmin, setCreatePasswordSubAdmin] = useState("");
+  const [perDashboard, setPerDashboard] = useState(false);
+  const [perMyShop, setPerMyShop] = useState(false);
+  const [perStock, setStock] = useState(false);
+  const [perReport, setPerReport] = useState(false);
+  const [perAdminManage, setPerAdminManage] = useState(false);
+  const [perSettings, setPerSettings] = useState(false);
+
+  // function set data craete sub admin
+  const handleSwitchDashboardChange = () => {
+    setPerDashboard(!perDashboard);
+  };
+
+  const handleSwitchMyShopChange = () => {
+    setPerMyShop(!perMyShop);
+  };
+
+  const handleSwitchStockChange = () => {
+    setStock(!perStock);
+  };
+
+  const handleSwitchReportChange = () => {
+    setPerReport(!perReport);
+  };
+
+  const handleSwitchAdminManageChange = () => {
+    setPerAdminManage(!perAdminManage);
+  };
+
+  const handleSwitchSettingsChange = () => {
+    setPerSettings(!perSettings);
+  };
+
+  const fetchAllUsers = async () => {
     Axios.get("https://shopee-api.deksilp.com/api/getAllUsers").then(function (
       response
     ) {
       setAllUsers(response.data.users);
     });
+  };
+  useEffect(() => {
+    fetchAllUsers();
   }, []);
 
   const handleAddAdmin = () => {
-    modalAdd.onClose();
-    modalCopy.onOpen();
+    const data = {
+      name_sub_admin: createNameSubAdmin,
+      email_sub_admin: createEmailSubAdmin,
+      password_sub_admin: createPasswordSubAdmin,
+      set_permission_dashboard: perDashboard,
+      set_permission_my_shop: perMyShop,
+      set_permission_stock: perStock,
+      set_permission_report: perReport,
+      set_permission_admin_manage: perAdminManage,
+      set_permission_settings: perSettings,
+    };
+    Axios.post("https://shopee-api.deksilp.com/api/createSubAdmin", data).then(
+      function (response) {
+        if (response.data.success) {
+          fetchAllUsers();
+          modalAdd.onClose();
+          modalCopy.onOpen();
+        }
+      }
+    );
   };
 
   const copyUrlAdmin = () => {
@@ -102,7 +165,10 @@ export default function AdminManagement() {
 
   const copyAllAdmin = () => {
     const accountAdmin =
-      "ลิงค์เข้าใช้งาน : http://admin.picpang.com/login\nUsername : aaaa\nPassword : 12345";
+      "ลิงค์เข้าใช้งาน : http://admin.picpang.com/login\nUsername : " +
+      createEmailSubAdmin +
+      "\nPassword : " +
+      createPasswordSubAdmin;
     navigator.clipboard.writeText(accountAdmin);
     modalCopy.onClose();
     modalSuccess.onOpen();
@@ -133,6 +199,9 @@ export default function AdminManagement() {
   };
   let item = parseInt(itemsPerPage);
   const totalPages = Math.ceil(getAllUsers.length / item);
+  const startIndex = (currentPage - 1) * item;
+  const endIndex = startIndex + item;
+  const currentItems = getAllUsers.slice(startIndex, endIndex);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -148,9 +217,66 @@ export default function AdminManagement() {
   };
 
   const handleConfirmDeleteAdmin = () => {
-    modalDelete.onClose();
-    modalDeleteSuccess.onOpen();
-  }
+    const data = {
+      userID: userIdAdmin,
+    };
+
+    Axios.post("https://shopee-api.deksilp.com/api/deleteSubAdmin", data).then(
+      function (response) {
+        if (response.data.success) {
+          fetchAllUsers();
+          modalDelete.onClose();
+          modalDeleteSuccess.onOpen();
+        }
+      }
+    );
+  };
+
+  // function filter search Date
+  const handleSearchDateSubAdmin = (event) => {
+    const DateSubAdmin = event.target.value;
+    setSearchDateSubAdmin(DateSubAdmin);
+    setSearchName('');
+    if (DateSubAdmin === "") {
+      setSearchDateSubAdmin(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await Axios.get(
+        `https://shopee-api.deksilp.com/api/getSearchDateSubAdmin?search=${searchDateSubAdmin}`
+      );
+      setAllUsers(response.data.users);
+    };
+
+    if (searchDateSubAdmin !== "") {
+      fetchData();
+    }
+  }, [searchDateSubAdmin]);
+
+  // function filter search Name
+  const handleSearchName = (event) => {
+    const searchName = event.target.value;
+    setSearchName(searchName);
+    setSearchDateSubAdmin('');
+    if (searchName === "") {
+      setSearchName(null);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await Axios.get(
+        `https://shopee-api.deksilp.com/api/getSearchName?search=${searchName}`
+      );
+      setAllUsers(response.data.users);
+    };
+
+    if (searchName !== "") {
+      fetchData();
+    }
+  }, [searchName]);
 
   return (
     <>
@@ -184,7 +310,9 @@ export default function AdminManagement() {
                   type="text"
                   fontSize="21px"
                   borderColor="gray.500"
-                  placeholder="ค้นหารายการ"
+                  placeholder="ค้นหาชื่อแอดมิน"
+                  value={searchName || ""}
+                  onChange={handleSearchName}
                 />
               </InputGroup>
             </Box>
@@ -200,6 +328,8 @@ export default function AdminManagement() {
                   fontSize="21px"
                   borderColor="gray.500"
                   placeholder="เลือกวันที่"
+                  value={searchDateSubAdmin || ""}
+                  onChange={handleSearchDateSubAdmin}
                 />
               </InputGroup>
             </Box>
@@ -245,7 +375,7 @@ export default function AdminManagement() {
               })}
             </Table.Header>
             <Table.Body>
-              {getAllUsers.map((item, index) => {
+              {currentItems.map((item, index) => {
                 const dateCreate = new Date(item.user_created_at);
                 const formattedDateCreate = dateCreate.toLocaleDateString();
                 return (
@@ -261,7 +391,7 @@ export default function AdminManagement() {
                       <Avatar
                         size="md"
                         name="adebayo"
-                        src="https://bit.ly/dan-abramov"
+                        src={"/images/" + item.avatar}
                       />
                     </Table.Cell>
                     <Table.Cell css={{ textAlign: "center" }}>
@@ -291,7 +421,12 @@ export default function AdminManagement() {
                             colorScheme="red"
                             aria-label="Delete"
                             icon={<DeleteIcon />}
-                            onClick={() => handleModalDeleteAdmin(item.userID,item.user_name)}
+                            onClick={() =>
+                              handleModalDeleteAdmin(
+                                item.userID,
+                                item.user_name
+                              )
+                            }
                           />
                         </HStack>
                       </Flex>
@@ -380,7 +515,7 @@ export default function AdminManagement() {
           size="custom"
         >
           <ModalOverlay />
-          <ModalContent width={"500px"} height={"410px"} mt={"160px"}>
+          <ModalContent width={"500px"} height={"460px"} mt={"160px"}>
             <ModalHeader>
               <Box>
                 <Center>
@@ -410,15 +545,36 @@ export default function AdminManagement() {
               <FormControl>
                 <HStack justify="center">
                   <Box>
-                    <FormLabel>Username : </FormLabel>
+                    <FormLabel>Name : </FormLabel>
                   </Box>
                   <Box>
-                    <Input placeholder="username@gmail.com" />
+                    <Input
+                      placeholder="name..."
+                      onChange={(event) =>
+                        setCreateNameSubAdmin(event.target.value)
+                      }
+                    />
                   </Box>
                 </HStack>
               </FormControl>
 
               <FormControl mt={4}>
+                <HStack justify="center">
+                  <Box>
+                    <FormLabel>Email : </FormLabel>
+                  </Box>
+                  <Box>
+                    <Input
+                      placeholder="username@gmail.com"
+                      onChange={(event) =>
+                        setCreateEmailSubAdmin(event.target.value)
+                      }
+                    />
+                  </Box>
+                </HStack>
+              </FormControl>
+
+              <FormControl mt={4} pr={5}>
                 <HStack justify="center">
                   <Box>
                     <FormLabel>Password : </FormLabel>
@@ -427,6 +583,9 @@ export default function AdminManagement() {
                     <Input
                       type={"password"}
                       placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                      onChange={(event) =>
+                        setCreatePasswordSubAdmin(event.target.value)
+                      }
                     />
                   </Box>
                 </HStack>
@@ -437,7 +596,11 @@ export default function AdminManagement() {
                 <Grid templateColumns="repeat(2, 1fr)" gap={3} mt={4}>
                   <GridItem>
                     <HStack>
-                      <Switch id="switch-dashboard" colorScheme={"green"} />
+                      <Switch
+                        id="switch-dashboard"
+                        colorScheme={"green"}
+                        onChange={handleSwitchDashboardChange}
+                      />
                       <Image
                         width={24}
                         height={24}
@@ -449,7 +612,11 @@ export default function AdminManagement() {
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id="switch-report" colorScheme={"green"} />
+                      <Switch
+                        id="switch-report"
+                        colorScheme={"green"}
+                        onChange={handleSwitchReportChange}
+                      />
                       <Image
                         width={24}
                         height={24}
@@ -461,7 +628,11 @@ export default function AdminManagement() {
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id="switch-shop" colorScheme={"green"} />
+                      <Switch
+                        id="switch-shop"
+                        colorScheme={"green"}
+                        onChange={handleSwitchMyShopChange}
+                      />
                       <Image
                         width={24}
                         height={24}
@@ -476,6 +647,7 @@ export default function AdminManagement() {
                       <Switch
                         id="switch-admin-management"
                         colorScheme={"green"}
+                        onChange={handleSwitchAdminManageChange}
                       />
                       <Image
                         width={24}
@@ -488,7 +660,11 @@ export default function AdminManagement() {
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id="switch-store" colorScheme={"green"} />
+                      <Switch
+                        id="switch-store"
+                        colorScheme={"green"}
+                        onChange={handleSwitchStockChange}
+                      />
                       <Image
                         width={24}
                         height={24}
@@ -500,7 +676,11 @@ export default function AdminManagement() {
                   </GridItem>
                   <GridItem>
                     <HStack>
-                      <Switch id="switch-setting" colorScheme={"green"} />
+                      <Switch
+                        id="switch-setting"
+                        colorScheme={"green"}
+                        onChange={handleSwitchSettingsChange}
+                      />
                       <Image
                         width={24}
                         height={24}
@@ -596,10 +776,10 @@ export default function AdminManagement() {
                   </Wrap>
                 </FormControl>
 
-                <FormControl id="copy-username">
+                <FormControl id="copy-username" pl={7}>
                   <Wrap align="center" justify="center">
                     <WrapItem>
-                      <FormLabel m={0}>Username : </FormLabel>
+                      <FormLabel m={0}>Email : </FormLabel>
                     </WrapItem>
 
                     <WrapItem>
@@ -607,12 +787,13 @@ export default function AdminManagement() {
                         htmlSize={25}
                         width="auto"
                         placeholder="username@gmail.com"
+                        value={createEmailSubAdmin}
                       />
                     </WrapItem>
                   </Wrap>
                 </FormControl>
 
-                <FormControl id="copy-password">
+                <FormControl id="copy-password" pl={2}>
                   <Wrap align="center" justify="center">
                     <WrapItem>
                       <FormLabel m={0}>Password : </FormLabel>
@@ -624,6 +805,7 @@ export default function AdminManagement() {
                         width="auto"
                         type={"password"}
                         placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                        value={createPasswordSubAdmin}
                       />
                     </WrapItem>
                   </Wrap>

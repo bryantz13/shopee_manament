@@ -265,6 +265,8 @@ export default function shop() {
   const handleSearch = (event) => {
     const searchQuery = event.target.value;
     setQuery(searchQuery);
+    setSearchDateShops('');
+    setFilterShops('');
     if (searchQuery === "") {
       setQuery(null);
     }
@@ -273,9 +275,10 @@ export default function shop() {
   const handleSearchDateShops = (event) => {
     const DateShops = event.target.value;
     setSearchDateShops(DateShops);
+    setQuery('');
+    setFilterShops('');
     if (DateShops === "") {
       setSearchDateShops(null);
-      setQuery(null);
     }
   };
 
@@ -308,6 +311,8 @@ export default function shop() {
   const handleFilterShops = (value) => {
     const TypeShops = value;
     setFilterShops(TypeShops);
+    setSearchDateShops('');
+    setQuery('');
   };
 
   useEffect(() => {
