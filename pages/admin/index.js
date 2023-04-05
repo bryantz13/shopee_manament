@@ -73,11 +73,15 @@ const colunmThTable = [
 
 export default function AdminManagement() {
   const modalAdd = useDisclosure();
+  const modalEdit = useDisclosure();
   const modalCopy = useDisclosure();
+  const modalCopyEdit = useDisclosure();
   const modalSuccess = useDisclosure();
+  const modalEditSuccess = useDisclosure();
   const modalDelete = useDisclosure();
   const modalDeleteSuccess = useDisclosure();
   const [inputValueURL, setInputValueURL] = useState("");
+  const [inputValueURLEdit, setInputValueURLEdit] = useState("");
   const [userIdAdmin, setUserIdAdmin] = useState("");
   const [userNameAdmin, setUserNameAdmin] = useState("");
   const [getAllUsers, setAllUsers] = useState([]);
@@ -88,7 +92,19 @@ export default function AdminManagement() {
   // filter search Name
   const [searchName, setSearchName] = useState("");
 
-  // create sub admin
+  // Edit sub admin
+  const [userIDSubAdmin, setUserIDSubAdmin] = useState("");
+  const [editNameSubAdmin, setEditNameSubAdmin] = useState("");
+  const [editEmailSubAdmin, setEditEmailSubAdmin] = useState("");
+  const [editPasswordSubAdmin, setEditPasswordSubAdmin] = useState("");
+  const [editPerDashboard, setEditPerDashboard] = useState(false);
+  const [editPerMyShop, setEditPerMyShop] = useState(false);
+  const [editPerStock, setEditStock] = useState(false);
+  const [editPerReport, setEditPerReport] = useState(false);
+  const [editPerAdminManage, setEditPerAdminManage] = useState(false);
+  const [editPerSettings, setEditPerSettings] = useState(false);
+
+  // create sub-admin
   const [createNameSubAdmin, setCreateNameSubAdmin] = useState("");
   const [createEmailSubAdmin, setCreateEmailSubAdmin] = useState("");
   const [createPasswordSubAdmin, setCreatePasswordSubAdmin] = useState("");
@@ -122,6 +138,31 @@ export default function AdminManagement() {
 
   const handleSwitchSettingsChange = () => {
     setPerSettings(!perSettings);
+  };
+
+  // function set permission Edit sub admin
+  const handleSwitchDashboardEditChange = () => {
+    setEditPerDashboard(!editPerDashboard);
+  };
+
+  const handleSwitchMyShopEditChange = () => {
+    setEditPerMyShop(!editPerMyShop);
+  };
+
+  const handleSwitchStockEditChange = () => {
+    setEditStock(!editPerStock);
+  };
+
+  const handleSwitchReportEditChange = () => {
+    setEditPerReport(!editPerReport);
+  };
+
+  const handleSwitchAdminManageEditChange = () => {
+    setEditPerAdminManage(!editPerAdminManage);
+  };
+
+  const handleSwitchSettingsEditChange = () => {
+    setEditPerSettings(!editPerSettings);
   };
 
   const fetchAllUsers = async () => {
@@ -158,9 +199,43 @@ export default function AdminManagement() {
     );
   };
 
+  const handleEditAdmin = () => {
+    const data = {
+      userID: userIDSubAdmin,
+      name_sub_admin: editNameSubAdmin,
+      email_sub_admin: editEmailSubAdmin,
+      password_sub_admin: editPasswordSubAdmin,
+      set_permission_dashboard: editPerDashboard,
+      set_permission_my_shop: editPerMyShop,
+      set_permission_stock: editPerStock,
+      set_permission_report: editPerReport,
+      set_permission_admin_manage: editPerAdminManage,
+      set_permission_settings: editPerSettings,
+    };
+    Axios.post("https://shopee-api.deksilp.com/api/updateSubAdmin", data).then(
+      function (response) {
+        if (response.data.success) {
+          fetchAllUsers();
+          if (editEmailSubAdmin != "" && editPasswordSubAdmin != "") {
+            modalEdit.onClose();
+            modalCopyEdit.onOpen();
+          } else {
+            modalEdit.onClose();
+            modalEditSuccess.onOpen();
+          }
+        }
+      }
+    );
+  };
+
   const copyUrlAdmin = () => {
     navigator.clipboard.writeText("http://admin.picpang.com/login");
     setInputValueURL("คัดลอกสำเร็จ!");
+  };
+
+  const copyUrlAdminEdit = () => {
+    navigator.clipboard.writeText("http://admin.picpang.com/login");
+    setInputValueURLEdit("คัดลอกสำเร็จ!");
   };
 
   const copyAllAdmin = () => {
@@ -172,6 +247,17 @@ export default function AdminManagement() {
     navigator.clipboard.writeText(accountAdmin);
     modalCopy.onClose();
     modalSuccess.onOpen();
+  };
+
+  const copyAllAdminEdit = () => {
+    const accountAdmin =
+      "ลิงค์เข้าใช้งาน : http://admin.picpang.com/login\nUsername : " +
+      editEmailSubAdmin +
+      "\nPassword : " +
+      editPasswordSubAdmin;
+    navigator.clipboard.writeText(accountAdmin);
+    modalCopyEdit.onClose();
+    modalEditSuccess.onOpen();
   };
 
   //pagination
@@ -236,7 +322,7 @@ export default function AdminManagement() {
   const handleSearchDateSubAdmin = (event) => {
     const DateSubAdmin = event.target.value;
     setSearchDateSubAdmin(DateSubAdmin);
-    setSearchName('');
+    setSearchName("");
     if (DateSubAdmin === "") {
       setSearchDateSubAdmin(null);
     }
@@ -259,7 +345,7 @@ export default function AdminManagement() {
   const handleSearchName = (event) => {
     const searchName = event.target.value;
     setSearchName(searchName);
-    setSearchDateSubAdmin('');
+    setSearchDateSubAdmin("");
     if (searchName === "") {
       setSearchName(null);
     }
@@ -277,6 +363,30 @@ export default function AdminManagement() {
       fetchData();
     }
   }, [searchName]);
+
+  const handleGetEditSubadmin = (
+    userID,
+    userName,
+    userEmail,
+    perDashboard,
+    perMyShop,
+    perStock,
+    perReport,
+    perAdminManage,
+    perSettings
+  ) => {
+    setUserIDSubAdmin(userID);
+    setEditPasswordSubAdmin("");
+    setEditNameSubAdmin(userName);
+    setEditEmailSubAdmin(userEmail);
+    setEditPerDashboard(perDashboard);
+    setEditPerMyShop(perMyShop);
+    setEditStock(perStock);
+    setEditPerReport(perReport);
+    setEditPerAdminManage(perAdminManage);
+    setEditPerSettings(perSettings);
+    modalEdit.onOpen();
+  };
 
   return (
     <>
@@ -378,6 +488,7 @@ export default function AdminManagement() {
               {currentItems.map((item, index) => {
                 const dateCreate = new Date(item.user_created_at);
                 const formattedDateCreate = dateCreate.toLocaleDateString();
+                const permissions = JSON.parse(item.permission);
                 return (
                   <Table.Row
                     key={index}
@@ -402,7 +513,26 @@ export default function AdminManagement() {
                       {item.role_name}
                     </Table.Cell>
                     <Table.Cell css={{ textAlign: "center" }}>
-                      ทุกเมนู
+                      <Select bg="white">
+                        {permissions.set_permission_dashboard == true && (
+                          <option value="option1">Dashboard</option>
+                        )}
+                        {permissions.set_permission_my_shop == true && (
+                          <option value="option1">ร้านค้าของฉัน</option>
+                        )}
+                        {permissions.set_permission_stock == true && (
+                          <option value="option1">คลังสินค้า</option>
+                        )}
+                        {permissions.set_permission_report == true && (
+                          <option value="option1">รายงาน</option>
+                        )}
+                        {permissions.set_permission_admin_manage == true && (
+                          <option value="option1">จัดการแอดมิน</option>
+                        )}
+                        {permissions.set_permission_settings == true && (
+                          <option value="option1">ตั้งค่า</option>
+                        )}
+                      </Select>
                     </Table.Cell>
                     <Table.Cell css={{ textAlign: "center" }}>
                       {formattedDateCreate}
@@ -415,6 +545,19 @@ export default function AdminManagement() {
                             colorScheme="blue"
                             aria-label="Edit"
                             icon={<EditIcon />}
+                            onClick={() =>
+                              handleGetEditSubadmin(
+                                item.userID,
+                                item.user_name,
+                                item.email,
+                                permissions.set_permission_dashboard,
+                                permissions.set_permission_my_shop,
+                                permissions.set_permission_stock,
+                                permissions.set_permission_report,
+                                permissions.set_permission_admin_manage,
+                                permissions.set_permission_settings
+                              )
+                            }
                           />
                           <IconButton
                             borderRadius="3xl"
@@ -985,6 +1128,382 @@ export default function AdminManagement() {
                 fontSize={"30px"}
                 padding={"1.25rem 2.5rem 1rem 2.5rem"}
                 onClick={modalDeleteSuccess.onClose}
+              >
+                ยืนยัน
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Start Modal Edit New Admin */}
+        <Modal
+          isOpen={modalEdit.isOpen}
+          onClose={modalEdit.onClose}
+          closeOnOverlayClick={false}
+          size="custom"
+        >
+          <ModalOverlay />
+          <ModalContent width={"500px"} height={"460px"} mt={"160px"}>
+            <ModalHeader>
+              <Box>
+                <Center>
+                  <HStack>
+                    <Image
+                      width={28}
+                      height={28}
+                      src={"/images/menu/จัดการแอดมิน.png"}
+                      alt="admin"
+                    />
+                    <Text fontSize="3xl">แก้ไไขแอดมิน</Text>
+                  </HStack>
+                </Center>
+              </Box>
+            </ModalHeader>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+
+            <ModalBody>
+              <FormControl>
+                <HStack justify="center">
+                  <Box>
+                    <FormLabel>Name : </FormLabel>
+                  </Box>
+                  <Box>
+                    <Input
+                      placeholder="name..."
+                      value={editNameSubAdmin}
+                      onChange={(e) => setEditNameSubAdmin(e.target.value)}
+                    />
+                  </Box>
+                </HStack>
+              </FormControl>
+
+              <FormControl mt={4}>
+                <HStack justify="center">
+                  <Box>
+                    <FormLabel>Email : </FormLabel>
+                  </Box>
+                  <Box>
+                    <Input
+                      placeholder="username@gmail.com"
+                      value={editEmailSubAdmin}
+                      onChange={(e) => setEditEmailSubAdmin(e.target.value)}
+                    />
+                  </Box>
+                </HStack>
+              </FormControl>
+
+              <FormControl mt={4} pr={5}>
+                <HStack justify="center">
+                  <Box>
+                    <FormLabel>Password : </FormLabel>
+                  </Box>
+                  <Box>
+                    <Input
+                      type={"password"}
+                      // placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                      onChange={(e) => setEditPasswordSubAdmin(e.target.value)}
+                    />
+                  </Box>
+                </HStack>
+              </FormControl>
+
+              <FormControl mt={5} pl={16} pr={5}>
+                <Text as="b">สิทธิ์การเข้าถึง</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={3} mt={4}>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-dashboard"
+                        colorScheme={"green"}
+                        isChecked={editPerDashboard}
+                        onChange={handleSwitchDashboardEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/dashboard.png"}
+                        alt="dashboard"
+                      />
+                      <Text>Dashboard</Text>
+                    </HStack>
+                  </GridItem>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-report"
+                        colorScheme={"green"}
+                        isChecked={editPerReport}
+                        onChange={handleSwitchReportEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/report.png"}
+                        alt="report"
+                      />
+                      <Text>รายงาน</Text>
+                    </HStack>
+                  </GridItem>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-shop"
+                        colorScheme={"green"}
+                        isChecked={editPerMyShop}
+                        onChange={handleSwitchMyShopEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/ร้านค้าของฉัน.png"}
+                        alt="shop"
+                      />
+                      <Text>ร้านค้าของฉัน</Text>
+                    </HStack>
+                  </GridItem>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-admin-management"
+                        colorScheme={"green"}
+                        isChecked={editPerAdminManage}
+                        onChange={handleSwitchAdminManageEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/จัดการแอดมิน.png"}
+                        alt="admin"
+                      />
+                      <Text>จัดการแอดมิน</Text>
+                    </HStack>
+                  </GridItem>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-store"
+                        colorScheme={"green"}
+                        isChecked={editPerStock}
+                        onChange={handleSwitchStockEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/คลังสินค้า.png"}
+                        alt="stock"
+                      />
+                      <Text>คลังสินค้า</Text>
+                    </HStack>
+                  </GridItem>
+                  <GridItem>
+                    <HStack>
+                      <Switch
+                        id="switch-setting"
+                        colorScheme={"green"}
+                        isChecked={editPerSettings}
+                        onChange={handleSwitchSettingsEditChange}
+                      />
+                      <Image
+                        width={24}
+                        height={24}
+                        src={"/images/menu/ตั้งค่า.png"}
+                        alt="setting"
+                      />
+                      <Text>ตั้งค่า</Text>
+                    </HStack>
+                  </GridItem>
+                </Grid>
+              </FormControl>
+            </ModalBody>
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                onClick={handleEditAdmin}
+                background="#f84c01"
+                height={"25px"}
+                fontSize={"22px"}
+                padding={"1rem 1.5rem"}
+                color="white"
+                mr={3}
+              >
+                บันทึก
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        {/* End Modal Edit New Admin */}
+
+        {/* Start Modal EDit Copy Link */}
+        <Modal
+          isOpen={modalCopyEdit.isOpen}
+          onClose={modalCopyEdit.onClose}
+          closeOnOverlayClick={false}
+        >
+          <ModalOverlay />
+          <ModalContent mt={"150px"}>
+            <ModalHeader>
+              <Box>
+                <Center>
+                  <HStack>
+                    <Image
+                      width={28}
+                      height={28}
+                      src={"/images/menu/จัดการแอดมิน.png"}
+                    />
+                    <Text fontSize="3xl">แก้ไขแอดมิน</Text>
+                  </HStack>
+                </Center>
+              </Box>
+            </ModalHeader>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+
+            <ModalBody>
+              <VStack>
+                <FormControl id="copy-link">
+                  <Wrap align="center" justify="center">
+                    <WrapItem>
+                      <FormLabel m={0}>ลิ้งเข้าใช้งาน : </FormLabel>
+                    </WrapItem>
+                    <WrapItem>
+                      <InputGroup>
+                        <Input
+                          htmlSize={22}
+                          width="auto"
+                          placeholder="http://admin.picpang.com/login"
+                          value={inputValueURLEdit}
+                        />
+                        <InputRightElement width="2.5rem">
+                          {/* <Button h="1.75rem" size="sm">
+                            Copy
+                          </Button> */}
+                          <Tooltip label="คัดลอกลิงค์" placement="top">
+                            <Image
+                              width={20}
+                              height={20}
+                              src={"/images/copyurladmin.png"}
+                              onClick={copyUrlAdminEdit}
+                            />
+                          </Tooltip>
+                        </InputRightElement>
+                      </InputGroup>
+                    </WrapItem>
+                  </Wrap>
+                </FormControl>
+
+                <FormControl id="copy-username" pl={7}>
+                  <Wrap align="center" justify="center">
+                    <WrapItem>
+                      <FormLabel m={0}>Email : </FormLabel>
+                    </WrapItem>
+
+                    <WrapItem>
+                      <Input
+                        htmlSize={25}
+                        width="auto"
+                        value={editEmailSubAdmin}
+                        placeholder="username@gmail.com"
+                        // value={createEmailSubAdmin}
+                      />
+                    </WrapItem>
+                  </Wrap>
+                </FormControl>
+
+                <FormControl id="copy-password" pl={2}>
+                  <Wrap align="center" justify="center">
+                    <WrapItem>
+                      <FormLabel m={0}>Password : </FormLabel>
+                    </WrapItem>
+
+                    <WrapItem>
+                      <Input
+                        htmlSize={25}
+                        width="auto"
+                        type={"password"}
+                        value={editPasswordSubAdmin}
+                        placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;"
+                        // value={createPasswordSubAdmin}
+                      />
+                    </WrapItem>
+                  </Wrap>
+                </FormControl>
+              </VStack>
+            </ModalBody>
+            <ModalFooter mt={1} justifyContent={"center"}>
+              <Button
+                onClick={copyAllAdminEdit}
+                background="#f84c01"
+                color="white"
+                ml={5}
+                height={"30px"}
+                fontSize={"20px"}
+                padding={"0rem 1.5rem"}
+              >
+                คัดลอก
+              </Button>
+              {/* <Button onClick={modalCopy.onClose}>ยกเลิก</Button> */}
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        {/* End Modal Edit Copy Link */}
+
+        {/* modal edit succees */}
+        <Modal
+          isOpen={modalEditSuccess.isOpen}
+          onClose={modalEditSuccess.onClose}
+          size={"lg"}
+          closeOnOverlayClick={false}
+        >
+          <ModalOverlay />
+          <ModalContent pt={10} mt={"150px"}>
+            <ModalHeader>
+              <Center>
+                <Image
+                  width={110}
+                  height={110}
+                  src={"/images/check.png"}
+                  alt="แก้ไขแอดมินเรียบร้อย"
+                />
+              </Center>
+            </ModalHeader>
+            <ModalCloseButton
+              backgroundColor={"#ff0000"}
+              color={"white"}
+              borderRadius={"50px"}
+              height={"20px"}
+              width={"20px"}
+              fontSize={"8px"}
+              fontWeight={"bold"}
+            />
+            <ModalBody textAlign={"center"}>
+              <Text as="b" fontSize="4xl">
+                แก้ไขแอดมินเรียบร้อยแล้ว
+              </Text>
+            </ModalBody>
+
+            <ModalFooter justifyContent={"center"}>
+              <Button
+                size={"lg"}
+                background="#f84c01"
+                color="white"
+                height={"38px"}
+                fontSize={"30px"}
+                padding={"1.25rem 2.5rem 1rem 2.5rem"}
+                onClick={modalEditSuccess.onClose}
               >
                 ยืนยัน
               </Button>
